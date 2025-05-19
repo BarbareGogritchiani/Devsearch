@@ -4,8 +4,10 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import Profile, Skill
+from .forms import CustomUserCreationForm
 
 def loginUser(request):
+    page = 'login'
 
     if request.user.is_authenticated:
         return redirect('profiles')
@@ -32,8 +34,29 @@ def loginUser(request):
 
 def logoutUser(request):
     logout(request)
-    messages.error(request, "User was logged out")
+    messages.error(request, "User was loggedcd  out")
     return redirect('login')
+
+def registerUser(request):
+    page = 'register'
+    form = CustomUserCreationForm()
+    if request.method == "POST":
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.username = user.username.lower()
+            user.save()
+
+            messages.success(request, "Account was created for " + user.username)
+            login(request, user)
+            return redirect('profiles')
+        else:
+            messages.error(request,
+                           "An error has occurred during registration")
+
+
+    context = {'page':page, 'form':form}
+    return render(request,'users/login_register.html',context)
 
 def profiles(request):
     profiles = Profile.objects.all()
